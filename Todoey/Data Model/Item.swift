@@ -8,9 +8,9 @@
 
 import Foundation
 
-class Item {
+class Item : Codable {
     
     var title : String = ""
-    var done : Bool = false
+    var done : Bool = false         //substitute 'done' with 'checked' in your project to make more sense
     
 }
