@@ -9,39 +9,40 @@
 import UIKit
 import RealmSwift
 
-class CategoryViewController: UITableViewController {
-    
-    let realm = try! Realm()
+class CategoryViewController: SwipeTableViewController {
     
     var categories : Results<Category>?
+    let realm = try! Realm()
     
 
     override func viewDidLoad() {
         super.viewDidLoad()                
         
         loadCategories()
+        
     }
     
     
     // MARK: - TableView Datasource Methods
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categories?.count ?? 1                //Nil Coalescing Operator
+        
+        return categories?.count ?? 1                // Nil Coalescing Operator
     }
     
-    //the code above means "if the value of 'categories' is not nil, return its count, ie. the number of 'categories' we have; but if its value is nil, return only 1"
+    //Note: the code above means "if the value of 'categories' is not nil, return its count, ie. the number of 'categories' we have; but if its value is nil, return only 1"
     
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
         cell.textLabel?.text = categories?[indexPath.row].name ?? "No Categories Added Yet"
         
-        //The above code means, "If 'categories' is not nil, then we get the item at the indexPath.row, grabbing its 'name' property; but if it is nil, then the text should be set to the String value above"
-        
         return cell
     }
+    
+    // Note: the code above means, "If the value of 'categories' is not nil, then we get the item at the indexPath.row, taking its 'name' property, and displaying it; but if it is nil, then the text should be set to the default string value above"
     
     
     // MARK: - TableView Delegate Methods
@@ -68,7 +69,7 @@ class CategoryViewController: UITableViewController {
         let alert = UIAlertController(title: "Add New Category", message: "", preferredStyle: .alert)
         
         let action = UIAlertAction(title: "Add", style: .default) { (action) in
-            //what will happen once the user clicks the Add button on our UIAlert
+            // what will happen once the user clicks the Add button on our UIAlert
             
             if textField.text == "" {
                 DispatchQueue.main.async {
@@ -115,9 +116,28 @@ class CategoryViewController: UITableViewController {
     }
     
     
+    // MARK: - Delete Data From Swipe Gesture
     
+    override func updateModel(at indexPath: IndexPath) {
+        
+        if let categoryToDelete = categories?[indexPath.row] {
+            do {
+                try realm.write {
+                    realm.delete(categoryToDelete.items)            //deleting it's child items first
+                    realm.delete(categoryToDelete)
+                }
+            } catch {
+                print("Error deleting category, \(error)")
+            }
+        }
+    }
+    
+    //Note: the above overrides the updateModel function in our SwipeTableViewController superclass, thereby taking care of deleting our data from Realm when the user presses the delete button after swiping.
     
 }
+
+
+
 
 
 

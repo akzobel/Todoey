@@ -9,11 +9,11 @@
 import UIKit
 import RealmSwift
 
-class TodoListViewController: UITableViewController {
+class TodoListViewController: SwipeTableViewController {
 
     var todoItems : Results<Item>?
-    
     let realm = try! Realm()
+    
     
     var selectedCategory : Category? {
         didSet {
@@ -22,7 +22,7 @@ class TodoListViewController: UITableViewController {
     }
     
     override func viewDidLoad() {
-        super.viewDidLoad()                
+        super.viewDidLoad()
         
     }
 
@@ -37,7 +37,7 @@ class TodoListViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        let cell = tableView.dequeueReusableCell(withIdentifier: "TodoItemCell", for: indexPath)
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
         if let item = todoItems?[indexPath.row] {
             
@@ -53,7 +53,7 @@ class TodoListViewController: UITableViewController {
         return cell
     }
     
-    /***************************************
+    /*****************************************************************************************************
     
     A ternary operator is a shorter way of condensing code. See ternary operator guide code below, as used in the cellForRowAt indexPath method above.
      
@@ -69,7 +69,7 @@ class TodoListViewController: UITableViewController {
      
     cell.accessoryType = item.done == true ? .checkmark : .none
      
-   *****************************************/
+   *****************************************************************************************************/
     
     
     // MARK: - TableView Delegate Methods
@@ -101,7 +101,7 @@ class TodoListViewController: UITableViewController {
         let alert = UIAlertController(title: "Add New Todoey Item", message: "", preferredStyle: .alert)
         
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
-            //what will happen once the user clicks the Add Item button on our UIAlert
+            // what will happen once the user clicks the Add Item button on our UIAlert
             
             if textField.text == "" {
                 DispatchQueue.main.async {
@@ -111,6 +111,7 @@ class TodoListViewController: UITableViewController {
                 if let currentCategory = self.selectedCategory {
                     do {
                         try self.realm.write {
+                            
                             let newItem = Item()
                             
                             newItem.title = textField.text!
@@ -144,6 +145,24 @@ class TodoListViewController: UITableViewController {
 
         tableView.reloadData()
     }
+    
+    
+    // MARK: - Delete Data From Swipe Gesture
+    
+    override func updateModel(at indexPath: IndexPath) {
+        
+        if let itemToDelete = todoItems?[indexPath.row] {
+            do {
+                try realm.write {
+                    realm.delete(itemToDelete)
+                }
+            } catch {
+                print("Error deleting item, \(error)")
+            }
+        }
+    }
+    
+    //Note: the above overrides the updateModel function in our SwipeTableViewController superclass, thereby taking care of deleting our data from Realm when the user presses the delete button after swiping.
 
 }
 
@@ -184,6 +203,4 @@ extension TodoListViewController: UISearchBarDelegate {
 
 
 
-
-
-//[cd] in NSPredicate code in searchBar means case and diacritic insensitive. Refer to NSPredicate cheat sheet.
+//Note: [cd] in NSPredicate code in searchBar means case and diacritic insensitive. Refer to NSPredicate cheat sheet.
